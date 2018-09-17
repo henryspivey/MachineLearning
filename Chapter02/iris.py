@@ -55,7 +55,6 @@ for i in range(len(features)):
     predictions.append(tr.predict([features[i]]))
 predictions = np.array(predictions)
 
-
 # cross validation with sklearn
 from sklearn import model_selection
 predictions= model_selection.cross_val_predict(
@@ -65,3 +64,52 @@ predictions= model_selection.cross_val_predict(
     cv = model_selection.LeaveOneOut()
 )
 print(np.mean(predictions==labels))
+
+# nearest neighbor classification
+#  When classifying a new element, this looks at the training data. For the object that is closest to it, its nearest neighbor. Then, it returns its label as the answer.
+
+import load
+from load import load_dataset
+feature_names = [
+    'area',
+    'perimeter',
+    'compactness',
+    'length of kernel',
+    'width of kernel',
+    'asymmetry coefficient',
+    'length of kernel groove',
+]
+
+data = load_dataset('seeds')
+features = data['features']
+target = data['target']
+
+
+from sklearn.neighbors import KNeighborsClassifier
+from matplotlib.colors import ListedColormap
+knn = KNeighborsClassifier(n_neighbors=1)
+
+kf = model_selection.KFold(n_splits=5, shuffle=False)
+means = []
+for training, testing in kf.split(features):
+    knn.fit(features[training], target[training])
+    prediction = knn.predict(features[testing])
+
+    curmean = np.mean(prediction  == target[testing])
+    means.append(curmean)
+print('Mean Accuracy: {:.1%}'.format(np.mean(means)))
+
+
+#normalization
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+clf  = KNeighborsClassifier(n_neighbors=1)
+clf = Pipeline([('norm', StandardScaler()) , ('knn', clf)])
+
+# random forest
+# based on decision trees
+from sklearn import  ensemble
+rf = ensemble.RandomForestClassifier(n_estimators=100)
+predict = model_selection.cross_val_predict(rf, features, target)
+print("RF accuracy: {:.1%}".format(np.mean(predict == target)))
